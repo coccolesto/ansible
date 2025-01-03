@@ -5,8 +5,8 @@
 
     - name: Install certs
       ansible.builtin.copy:
-        src: /home/ubuntu/STAR_invalsi_it.crt
-        dest: /usr/local/share/ca-certificates/STAR_invalsi_it.crt
-
+        src: /home/ubuntu/ca-certificates/
+        dest: /usr/local/share/ca-certificates/
+        
     - name: Update cert index
       shell: /usr/sbin/update-ca-certificates
