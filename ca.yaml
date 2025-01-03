@@ -1,0 +1,12 @@
+- hosts: all
+  tasks:
+    - name: Ensure local certs directory exists
+      file: state=directory path=/usr/local/share/ca-certificates
+
+    - name: Install certs
+      ansible.builtin.copy:
+        src: /home/ubuntu/STAR_invalsi_it.crt
+        dest: /usr/local/share/ca-certificates/STAR_invalsi_it.crt
+
+    - name: Update cert index
+      shell: /usr/sbin/update-ca-certificates
