@@ -1,0 +1,53 @@
+- name: install zabbix-agent2 on ubuntu 
+  hosts: all
+  vars: 
+    zabbix_server: zabbix
+  tasks:
+    - name: de-Install zabbix-agent if exists
+      ansible.builtin.apt:
+        state: absent
+        purge: true
+        autoremove: true
+        autoclean: true
+        name:
+          - zabbix-agent
+  
+    - name: Create zabbix directory if it does not exist
+      ansible.builtin.file:
+        path: /etc/zabbix/zabbix_agent2.d/
+        state: directory
+        mode: '0755'
+  
+    - name: zabbix autoregistration conf
+      ansible.builtin.blockinfile:
+        append_newline: true
+        create: true
+        path: /etc/zabbix/zabbix_agent2.d/autoregistration.conf
+        block: |
+          Hostname=
+          Server= {{zabbix_server}} 
+          ServerActive= {{zabbix_server}}
+          HostMetadataItem=system.uname
+  
+    - name: Install zabbix repo .deb packages
+      ansible.builtin.apt:
+        state: present
+        deb: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest+ubuntu{{ ansible_lsb.release }}_all.deb
+  
+    - name: Update all packages to their latest version
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        update_cache: true
+  
+    - name: Install zabbix-agent2 packages
+      ansible.builtin.apt:
+        state: present
+        name:
+        - zabbix-agent2
+        - zabbix-agent2-plugin-*
+  
+    - name: Enable zabbix-agent2 service
+      ansible.builtin.service:
+        enabled: true
+        name: zabbix-agent2
