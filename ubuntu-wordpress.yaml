@@ -1,0 +1,72 @@
+- name: install wordpress-latest on ubuntu 
+  hosts: all
+  vars: 
+  tasks:
+    - name: Install apache2 packages
+      ansible.builtin.apt:
+        state: present
+        update_cache: true
+        name:
+        - apache2
+        - apache2-bin
+        - apache2-data
+        - apache2-utils
+        - libapache2-mod-php
+        - php
+        - php-common
+        - php-curl
+        - php-gd
+        - php-intl
+        - php-mbstring
+        - php-mysql
+        - php-soap
+        - php-xml
+        - php-xmlrpc
+        - php-zip
+        - php-cli
+        - php-opcache
+        - php-readline
+        - php-ldap
+        - curl 
+    - name: write apache's wp conf
+      ansible.builtin.blockinfile:
+        create: true
+        backup: true
+        mode: 0644
+        append_newline: true
+        path: /etc/apache2/sites-available/wordpress.conf
+        block: |
+          <VirtualHost *:80>
+            DocumentRoot /var/www/wordpress
+            <Directory /var/www/wordpress>
+                Options FollowSymLinks
+                AllowOverride All
+                DirectoryIndex index.php
+                Require all granted
+            </Directory>
+            <Directory /var/www/wordpress/wp-content>
+                Options FollowSymLinks
+                Require all granted
+            </Directory>
+          </VirtualHost>
+    - name: download and install wordpress-latest
+      vars:
+        cmds:
+          - curl https://wordpress.org/latest.tar.gz | tar zx -C /var/www
+          - curl -fsSL https://api.wordpress.org/secret-key/1.1/salt/ >/var/www/wordpress/wp-salt.php
+          - echo "php_value upload_max_filesize 4096M" >>/var/www/wordpress/.htaccess
+          - echo "php_value post_max_size 4096M" >>/var/www/wordpress/.htaccess
+          - echo "php_value memory_limit 1024M" >>/var/www/wordpress/.htaccess
+          - echo "php_value max_execution_time 1200" >>/var/www/wordpress/.htaccess
+          - echo "php_value max_input_time 1200" >>/var/www/wordpress/.htaccess
+          - chown -R www-data:www-data /var/www/wordpress
+          - a2ensite wordpress
+          - a2enmod rewrite
+          - a2dissite 000-default
+          - usermod -a -G www-data ubuntu
+      ansible.builtin.shell:
+        chdir: /tmp
+        cmd: '{{ item }}'
+      with_items: '{{ cmds }}'
+   - name: Unconditionally reboot the machine
+     ansible.builtin.reboot:
