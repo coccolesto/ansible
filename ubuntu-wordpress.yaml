@@ -68,5 +68,18 @@
         chdir: /tmp
         cmd: '{{ item }}'
       with_items: '{{ cmds }}'
-   - name: Unconditionally reboot the machine
-     ansible.builtin.reboot:
+
+    - name: Install WP-CLI
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        dest: /usr/bin/wp
+        mode: 0755
+
+    - name: Install WP-CLI tab completions
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/wp-cli/wp-cli/master/utils/wp-completion.bash
+        dest: /etc/bash_completion.d
+        mode: 0644
+
+    - name: Unconditionally reboot the machine
+      ansible.builtin.reboot:
